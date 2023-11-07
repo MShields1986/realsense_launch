@@ -21,7 +21,7 @@ catkin_make
 ```
 
 ## Usage
-Source you environment and run the launch file using the following command.
+Source your environment and run the launch file using the following command.
 ```bash
 roslaunch realsense_launch realsense.launch
 ```
