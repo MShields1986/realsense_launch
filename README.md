@@ -1,5 +1,5 @@
 # realsense_launch
-ROS Noetic package for launching RealSense driver and getting an RGB pointcloud
+ROS Noetic package for launching the Intel RealSense driver and getting an RGB pointcloud as output.
 
 ## Installation
 ```bash
@@ -21,12 +21,13 @@ catkin_make
 ```
 
 ## Usage
-The default args launch a d415 with visualisation in RViz.
+Source you environment and run the launch file using the following command.
 ```bash
 roslaunch realsense_launch realsense.launch
 ```
+The default args launch a d415 with visualisation of the pointcloud, RGB image and d415 camera model in RViz.
 
-To the device type and visualisation can be toggled with arguements.
+The device type and visualisation can be toggled with arguements.
 ```bash
 roslaunch realsense_launch realsense.launch device_type:=d435 rviz:=false
 ```
