@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
+
+  <node pkg="nodelet" type="nodelet" name="register_depth_2_rgb"
+        args="load depth_image_proc/register nodelet_manager">
+
+    <remap from="rgb/camera_info" to="/camera/color/camera_info"/>
+    <remap from="depth/camera_info" to="/camera/depth/camera_info"/>
+    <remap from="depth/image_rect" to="/camera/depth/image_rect_raw"/>
+
+    <remap from="depth_registered/camera_info" to="/camera/depth/registered/camera_info"/>
+    <remap from="depth_registered/image_rect" to="/camera/depth/registered/image_rect_raw"/>
+  </node>
+
+
+  <!--
+  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
+  -->
+  <node pkg="nodelet" type="nodelet" name="depth_2_rgb_points"
+        args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+
+    <remap from="rgb/camera_info" to="/camera/color/camera_info"/>
+    <remap from="rgb/image_rect_color" to="/camera/color/image_raw"/>
+    <remap from="depth_registered/image_rect" to="/camera/depth/registered/image_rect_raw"/>
+
+    <remap from="depth_registered/points" to="/camera/color/pointcloud"/>
+  </node>
+
+</launch>
