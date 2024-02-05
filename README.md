@@ -21,10 +21,12 @@ catkin_make
 ```
 
 ## Usage
-The default args launch a d435i with visualisation in RViz.
+Source your environment and run the launch file using the following command.
 ```bash
 roslaunch realsense_launch realsense.launch
 ```
+
+The default args launch a d435i with visualisation in RViz.
 
 The device type and visualisation can be toggled with arguements.
 ```bash
