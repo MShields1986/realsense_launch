@@ -5,7 +5,7 @@ crop_box:
   # Frame crop box is defined in
   input_frame: map
   # Frame data is to be output in
-  output_frame: rs_camera_1_color_optical_frame #$(arg name_space)_color_optical_frame
+  output_frame: camera_color_optical_frame #$(arg name_space)_color_optical_frame
 
   min_x: -0.5
   max_x:  2.1

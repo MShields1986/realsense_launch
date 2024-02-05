@@ -5,6 +5,8 @@
     <arg name="external_manager" default="false"/>
     <arg name="nodelet_manager_name" default="pcl_manager" />
 
+    <arg name="input_topic" default="color/pointcloud" />
+
     <arg name="cropping_configuration" default="camera_only.yaml" />
     <!-- Retired in favour of config file
     <arg name="cropping_dim_input_frame" default="color_optical_frame" />
@@ -22,7 +24,7 @@
 
     <!-- Bounding Box -->
     <node pkg="nodelet" type="nodelet" name="crop_box" args="load pcl/CropBox $(arg nodelet_manager_name)" output="screen">
-        <remap from="~input" to="color/pointcloud" />
+        <remap from="~input" to="$(arg input_topic)" />
 
         <param name="keep_organized" type="bool" value="true" />
 
