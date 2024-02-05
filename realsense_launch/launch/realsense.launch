@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <arg name="device_type" default="d415" />
+  <arg name="nodelet_manager_name" default="rs_pipeline_manager" />
+  <arg name="device_type" default="d435i" />
+  <!--<arg name="device_type" default="d435" />-->
+  <!--<arg name="device_type" default="d415" />-->
   <arg name="fps" default="15" />
   <arg name="rviz" default="true" />
+  <arg name="name_space" default="rs_camera_1" />
+
 
   <!-- Camera Driver -->
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="external_manager" value="true"/>
+    <arg name="manager" value="$(arg nodelet_manager_name)"/>
+    <arg name="camera" value="$(arg name_space)"/> <!-- namespace for camera -->    
     <arg name="device_type" value="$(arg device_type)"/>
     <arg name="initial_reset" value="true"/>
     <arg name="enable_sync" value="true"/>
@@ -19,23 +27,57 @@
     <arg name="color_height" value="480"/>
     <arg name="color_fps" value="$(arg fps)"/>
 
-    <!-- Dropped these as pointcloud output doesn't appear to work -->
+    <!-- Dropped these as pointcloud output doesn't appear to work for the Noetic driver-->
     <!--<arg name="pointcloud" value="true"/>-->
     <!--<arg name="ordered_pc" value="true"/>-->
   </include>
 
-  <!-- Depth Image Pipeline -->
-  <include file="$(find realsense_launch)/launch/realsense_2_rgbcloud.launch"/>
+
+  <group ns="$(arg name_space)">
+    <!-- Nodelet Manager -->
+    <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager" />
+
+
+    <!-- Depth Image Pipeline to Create RGB Cloud -->
+    <include file="$(find realsense_launch)/launch/depth_2_rgbcloud.launch">
+      <arg name="external_manager" value="true"/>
+      <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
+    </include>
+
+
+    <!-- Pointcloud Processing Pipleine -->
+    <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
+      <arg name="external_manager" value="true"/>
+      <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
+      <arg name="cropping_dim_input_frame" value="$(arg name_space)_link" />
+      <arg name="cropped_data_output_frame" value="$(arg name_space)_color_optical_frame" />
+    </include>
+  </group>
+
+
+  <!-- Camera Descriptions -->
+  <group if="$(eval arg('device_type') == 'd415')">
+    <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d415_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+  </group>
+
+
+  <group if="$(eval arg('device_type') == 'd435i')">
+    <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d435i_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+  </group>
+
+  <group if="$(eval arg('device_type') == 'd435')">
+    <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d435_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+  </group>
+
+
+  <!-- Robot State Publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
 
   <!-- RViz -->
   <group if="$(arg rviz)">
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find realsense_launch)/rviz/cloud_viewer.rviz" />
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find realsense_launch)/rviz/viewer.rviz" />
   </group>
-
-  <!-- Camera Description for d415 -->
-  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find realsense2_description)/urdf/test_d415_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true" />
-
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
 
 </launch>

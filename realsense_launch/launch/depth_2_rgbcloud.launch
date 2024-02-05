@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="external_manager" default="false"/>
+  <arg name="nodelet_manager_name" default="rs_2_rgbcloud_manager" />
+
+
+  <!-- Nodelet Manager -->
+  <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
+
+  <!-- Depth Image Pipeline to Create RGB Cloud -->
+  <node pkg="nodelet" type="nodelet" name="register_depth_2_rgb"
+        args="load depth_image_proc/register $(arg nodelet_manager_name)">
+
+    <remap from="rgb/camera_info" to="color/camera_info"/>
+    <remap from="depth/camera_info" to="depth/camera_info"/>
+    <remap from="depth/image_rect" to="depth/image_rect_raw"/>
+
+    <remap from="depth_registered/camera_info" to="depth/registered/camera_info"/>
+    <remap from="depth_registered/image_rect" to="depth/registered/image_rect_raw"/>
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="depth_2_rgb_points"
+        args="load depth_image_proc/point_cloud_xyzrgb $(arg nodelet_manager_name)">
+
+    <remap from="rgb/camera_info" to="color/camera_info"/>
+    <remap from="rgb/image_rect_color" to="color/image_raw"/>
+    <remap from="depth_registered/image_rect" to="depth/registered/image_rect_raw"/>
+
+    <remap from="depth_registered/points" to="color/pointcloud"/>
+  </node>
+
+</launch>

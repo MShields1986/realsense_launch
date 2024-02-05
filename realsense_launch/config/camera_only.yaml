@@ -1,0 +1,12 @@
+# !! Currently not being used !!
+# Pointcloud Cropping Inputs
+crop:
+  dim_input_frame: $(arg name_space)_link
+  data_output_frame: $(arg name_space)_color_optical_frame
+
+  min_x:  0.2
+  max_x:  0.8
+  min_y: -0.2
+  max_y:  0.2
+  min_z: -0.5
+  max_z:  0.5

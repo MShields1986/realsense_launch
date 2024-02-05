@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!--https://wiki.ros.org/pcl_ros/Tutorials/filters-->
+    <arg name="rtabmap_viz" default="true" />
+
+    <arg name="external_manager" default="false"/>
+    <arg name="nodelet_manager_name" default="pcl_manager" />
+
+    <arg name="cropping_dim_input_frame" default="map" />
+    <arg name="cropped_data_output_frame" default="color_optical_frame" />
+
+
+    <!-- Nodelet Manager -->
+    <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
+
+
+    <!-- Bounding Box -->
+    <node pkg="nodelet" type="nodelet" name="crop_box" args="load pcl/CropBox $(arg nodelet_manager_name)" output="screen">
+        <remap from="~input" to="color/pointcloud" />
+        <param name="input_frame" type="string" value="$(arg cropping_dim_input_frame)" />
+        <param name="output_frame" type="string" value="$(arg cropped_data_output_frame)" />
+        <param name="min_x" type="double" value="0.2" />
+        <param name="max_x" type="double" value="0.8" />
+        <param name="min_y" type="double" value="-0.2" />
+        <param name="max_y" type="double" value="0.2" />
+        <param name="min_z" type="double" value="-0.5" />
+        <param name="max_z" type="double" value="0.5" />
+        <param name="keep_organized" type="bool" value="true" />
+        <!--
+        <rosparam>
+        # Values for Spirit Cell
+        #min_x: -0.5
+        #max_x:  2.1
+        #min_y: -1.0
+        #max_y: -0.5
+        #min_z:  0.7
+        #max_z:  1.4
+        #keep_organized: True
+        #input_frame: map
+        #output_frame: camera_color_optical_frame
+        </rosparam>
+        -->
+    </node>
+
+
+    <!-- Voxel Grid -->
+    <!-- Be aware this step removes order/structure -->
+    <node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid $(arg nodelet_manager_name)" output="screen">
+        <remap from="~input" to="crop_box/output" />
+        <rosparam>
+        filter_field_name: z
+        filter_limit_min: 0.01
+        filter_limit_max: 1.5
+        filter_limit_negative: False
+        leaf_size: 0.01
+        </rosparam>
+    </node>
+
+
+    <!-- Outlier Removal -->
+    <node pkg="nodelet" type="nodelet" name="outlier_removal" args="load pcl/StatisticalOutlierRemoval $(arg nodelet_manager_name)" output="screen">
+        <remap from="~input" to="voxel_grid/output" />
+        <rosparam>
+        mean_k: 2
+        stddev:  1
+        negative: False
+        </rosparam>
+    </node>
+
+
+    <!-- Normal Estimation -->
+    <!-- https://wiki.ros.org/pcl_ros/Tutorials/SACSegmentationFromNormals%20planar%20segmentation -->
+    <node pkg="nodelet" type="nodelet" name="normal_estimation" args="load pcl/NormalEstimation $(arg nodelet_manager_name)" output="screen">
+        <remap from="~input" to="outlier_removal/output" />
+        <rosparam>
+        # Mandatory parameters
+        k_search: 0
+        radius_search: 0.015
+        # Set the spatial locator. Possible values are: 0 (ANN), 1 (FLANN), 2 (organized)
+        spatial_locator: 0
+        </rosparam>
+    </node>
+
+
+</launch>
