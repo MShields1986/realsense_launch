@@ -7,6 +7,7 @@
   <arg name="fps" default="15" />
   <arg name="rviz" default="true" />
   <arg name="name_space" default="rs_camera_1" />
+  <arg name="cropping_config" default="camera_only.yaml" />
 
 
   <!-- Camera Driver -->
@@ -49,8 +50,12 @@
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
       <arg name="external_manager" value="true"/>
       <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
+      <arg name="cropping_configuration" value="$(arg cropping_config)"/>
+
+      <!-- Retired in favour of cropping config file
       <arg name="cropping_dim_input_frame" value="$(arg name_space)_link" />
       <arg name="cropped_data_output_frame" value="$(arg name_space)_color_optical_frame" />
+      -->
     </include>
   </group>
 

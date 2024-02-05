@@ -1,22 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <!--https://wiki.ros.org/pcl_ros/Tutorials/filters-->
-    <arg name="rtabmap_viz" default="true" />
 
     <arg name="external_manager" default="false"/>
     <arg name="nodelet_manager_name" default="pcl_manager" />
 
-    <arg name="cropping_dim_input_frame" default="map" />
+    <arg name="cropping_configuration" default="camera_only.yaml" />
+    <!-- Retired in favour of config file
+    <arg name="cropping_dim_input_frame" default="color_optical_frame" />
     <arg name="cropped_data_output_frame" default="color_optical_frame" />
+    -->
 
 
     <!-- Nodelet Manager -->
     <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
 
 
+    <!-- Load params for cropping the cloud -->
+    <rosparam file="$(find realsense_launch)/config/$(arg cropping_configuration)" command="load" />
+
+
     <!-- Bounding Box -->
     <node pkg="nodelet" type="nodelet" name="crop_box" args="load pcl/CropBox $(arg nodelet_manager_name)" output="screen">
         <remap from="~input" to="color/pointcloud" />
+
+        <param name="keep_organized" type="bool" value="true" />
+
+        <!--
+        <remap from="~input_frame" to="crop/dim_input_frame" />
+        <remap from="~output_frame" to="crop/data_output_frame" />
+        -->
+
+        <!-- Retired in favour of cropping config file
         <param name="input_frame" type="string" value="$(arg cropping_dim_input_frame)" />
         <param name="output_frame" type="string" value="$(arg cropped_data_output_frame)" />
         <param name="min_x" type="double" value="0.2" />
@@ -26,6 +41,7 @@
         <param name="min_z" type="double" value="-0.5" />
         <param name="max_z" type="double" value="0.5" />
         <param name="keep_organized" type="bool" value="true" />
+        -->
         <!--
         <rosparam>
         # Values for Spirit Cell

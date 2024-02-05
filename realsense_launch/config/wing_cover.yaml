@@ -1,8 +1,11 @@
-# !! Currently not being used !!
+# TODO: Find a way to merg namespace arg and the frame name params
+
 # Pointcloud Cropping Inputs
-crop:
-  dim_input_frame: map
-  data_output_frame: $(arg name_space)_color_optical_frame
+crop_box:
+  # Frame crop box is defined in
+  input_frame: map
+  # Frame data is to be output in
+  output_frame: rs_camera_1_color_optical_frame #$(arg name_space)_color_optical_frame
 
   min_x: -0.5
   max_x:  2.1
