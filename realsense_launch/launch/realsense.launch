@@ -8,6 +8,7 @@
   <arg name="rviz" default="true" />
   <arg name="name_space" default="rs_camera_1" />
   <arg name="cropping_config" default="camera_only.yaml" />
+  <arg name="stand_alone" default="true" />
 
 
   <!-- Camera Driver -->
@@ -59,25 +60,25 @@
     </include>
   </group>
 
+  <group if="$(arg stand_alone)">
+    <!-- Camera Descriptions -->
+    <group if="$(eval arg('device_type') == 'd415')">
+      <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d415_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+    </group>
 
-  <!-- Camera Descriptions -->
-  <group if="$(eval arg('device_type') == 'd415')">
-    <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d415_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+
+    <group if="$(eval arg('device_type') == 'd435i')">
+      <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d435i_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+    </group>
+
+    <group if="$(eval arg('device_type') == 'd435')">
+      <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d435_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
+    </group>
+
+
+    <!-- Robot State Publisher -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
   </group>
-
-
-  <group if="$(eval arg('device_type') == 'd435i')">
-    <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d435i_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
-  </group>
-
-  <group if="$(eval arg('device_type') == 'd435')">
-    <param name="robot_description" command="$(find xacro)/xacro '$(find realsense_launch)/urdf/test_d435_camera.urdf.xacro' use_nominal_extrinsics:=true add_plug:=true use_mesh:=true name_space:=$(arg name_space)" />
-  </group>
-
-
-  <!-- Robot State Publisher -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-
 
   <!-- RViz -->
   <group if="$(arg rviz)">
