@@ -9,6 +9,7 @@
   <arg name="name_space" default="rs_camera_1" />
   <arg name="cropping_config" default="camera_only.yaml" />
   <arg name="stand_alone" default="true" />
+  <arg name="interactive_cropbox" default="false" />
 
 
   <!-- Camera Driver -->
@@ -53,11 +54,10 @@
       <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
       <arg name="cropping_configuration" value="$(arg cropping_config)"/>
 
-      <!-- Retired in favour of cropping config file
-      <arg name="cropping_dim_input_frame" value="$(arg name_space)_link" />
-      <arg name="cropped_data_output_frame" value="$(arg name_space)_color_optical_frame" />
-      -->
     </include>
+
+    <node if="$(arg interactive_cropbox)" pkg="pcl_cropbox_setter" name="cropbox_setter" type="cropbox_setter.py" />
+
   </group>
 
   <group if="$(arg stand_alone)">

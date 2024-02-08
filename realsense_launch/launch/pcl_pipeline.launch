@@ -6,13 +6,10 @@
     <arg name="nodelet_manager_name" default="pcl_manager" />
 
     <arg name="input_topic" default="color/pointcloud" />
+    <arg name="interactive_cropbox" default="false" />
 
-    <arg name="cropping_configuration" default="camera_only.yaml" />
-    <!-- Retired in favour of config file
-    <arg name="cropping_dim_input_frame" default="color_optical_frame" />
-    <arg name="cropped_data_output_frame" default="color_optical_frame" />
-    -->
-
+    <arg if="$(arg interactive_cropbox)" name="cropping_configuration" default="camera_only_interactive_cropbox.yaml" />
+    <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" default="camera_only.yaml" />
 
     <!-- Nodelet Manager -->
     <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
@@ -79,8 +76,8 @@
     <node pkg="nodelet" type="nodelet" name="outlier_removal" args="load pcl/StatisticalOutlierRemoval $(arg nodelet_manager_name)" output="screen">
         <remap from="~input" to="voxel_grid/output" />
         <rosparam>
-        mean_k: 2
-        stddev:  1
+        mean_k: 300
+        stddev:  0.005
         negative: False
         </rosparam>
     </node>

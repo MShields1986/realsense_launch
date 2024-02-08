@@ -1,0 +1,15 @@
+# Pointcloud Cropping Inputs
+crop_box:
+  # Frame crop box is defined in
+  # Ought to be set to pcl_crop_box for interactive cropbox
+  input_frame: pcl_crop_box
+  # Frame data is to be output in
+  output_frame: rs_camera_1_color_optical_frame
+
+  # Min values ought to be set to zero for interactive cropbox
+  min_x: 0.0
+  max_x: 0.6
+  min_y: 0.0
+  max_y: 0.4
+  min_z: 0.0
+  max_z: 1.0
