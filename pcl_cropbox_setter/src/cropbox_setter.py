@@ -34,9 +34,12 @@ class CropBoxSetter:
         signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
-        rospy.init_node("cropbox_setter", log_level=rospy.INFO)
+        rospy.init_node('cropbox_setter', log_level=rospy.INFO)
+        rospy.loginfo(f'Cropbox Setter Node Starting...')
 
-        self.rate = rospy.Rate(1)
+        self.ns = rospy.get_namespace()
+
+        self.rate = rospy.Rate(30)
 
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
 
@@ -44,23 +47,31 @@ class CropBoxSetter:
         self.servicable_value = False
 
         # TODO: Set initial value from config file
-        self.origin = TransformStamped()
+        self.origin = self.populate_tf(
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+            )
 
         self.x = self.y = self.z = 0
 
-        while not rospy.has_param('/crop_box/min_x'):
-            rospy.loginfo_throttle(5, f"Holding for cropbox size parameters")
+        while not rospy.has_param(f'{self.ns}crop_box/min_x'):
+            rospy.loginfo_throttle(5, f'Holding for cropbox size parameters on {self.ns}crop_box')
 
-        if rospy.has_param('/crop_box/min_x'):
-            self.x = round(rospy.get_param('/crop_box/max_x') - rospy.get_param('/crop_box/min_x'), 3)
-            self.y = round(rospy.get_param('/crop_box/max_y') - rospy.get_param('/crop_box/min_y'), 3)
-            self.z = round(rospy.get_param('/crop_box/max_z') - rospy.get_param('/crop_box/min_z'), 3)
-            rospy.loginfo(f"Cropbox geometry")
-            rospy.loginfo(f"x: {self.x}")
-            rospy.loginfo(f"y: {self.y}")
-            rospy.loginfo(f"z: {self.z}")
+        if rospy.has_param(f'{self.ns}crop_box/min_x'):
+            self.x = round(rospy.get_param(f'{self.ns}crop_box/max_x') - rospy.get_param(f'{self.ns}crop_box/min_x'), 3)
+            self.y = round(rospy.get_param(f'{self.ns}crop_box/max_y') - rospy.get_param(f'{self.ns}crop_box/min_y'), 3)
+            self.z = round(rospy.get_param(f'{self.ns}crop_box/max_z') - rospy.get_param(f'{self.ns}crop_box/min_z'), 3)
 
-        self.marker_pub = rospy.Publisher("/crop_box_marker", Marker, queue_size = 2, latch=True)
+            rospy.loginfo(f'Cropbox geometry...')
+            rospy.loginfo(f'x: {self.x}')
+            rospy.loginfo(f'y: {self.y}')
+            rospy.loginfo(f'z: {self.z}')
+
+        self.marker_pub = rospy.Publisher(f'{self.ns}cropbox_marker', Marker, queue_size = 2, latch=True)
         self.populate_marker(self.x, self.y, self.z)
 
 
@@ -68,10 +79,34 @@ class CropBoxSetter:
         self.kill_now = True
 
 
+    def populate_tf(self, x, y, z, yaw, pitch, roll):
+        tf = TransformStamped()
+
+        tf.header.stamp = rospy.Time.now()
+        tf.header.frame_id = f'{self.ns[:-1]}_link' #'base_link' #'map'
+        tf.child_frame_id = 'pcl_crop_box'
+
+        tf.transform.translation.x = round(x, 3)
+        tf.transform.translation.y = round(y, 3)
+        tf.transform.translation.z = round(z, 3)
+
+        q = quaternion_from_euler(
+            round(roll * to_rads, 3),
+            round(pitch * to_rads, 3),
+            round(yaw * to_rads, 3))
+
+        tf.transform.rotation.x = q[0]
+        tf.transform.rotation.y = q[1]
+        tf.transform.rotation.z = q[2]
+        tf.transform.rotation.w = q[3]
+
+        return tf
+
+
     def populate_marker(self, x, y, z):
         self.marker = Marker()
         #self.marker.header.stamp = rospy.Time.now()
-        self.marker.header.frame_id = "pcl_crop_box"
+        self.marker.header.frame_id = 'pcl_crop_box'
         self.marker.type = 1 # Cube
         self.marker.id = 0
 
@@ -101,33 +136,22 @@ class CropBoxSetter:
         """
         Service to interactively set the frame of the crop box
         """
-        rospy.loginfo(f"Request for change to cropbox location received")
-        self.origin = TransformStamped()
-
-        self.origin.header.stamp = rospy.Time.now()
-        self.origin.header.frame_id = "map"
-        self.origin.child_frame_id = "pcl_crop_box"
-
-        self.origin.transform.translation.x = round(req.x, 3)
-        self.origin.transform.translation.y = round(req.y, 3)
-        self.origin.transform.translation.z = round(req.z, 3)
-
-        q = quaternion_from_euler(
-            round(req.roll * to_rads, 3),
-            round(req.pitch * to_rads, 3),
-            round(req.yaw * to_rads, 3))
-
-        self.origin.transform.rotation.x = q[0]
-        self.origin.transform.rotation.y = q[1]
-        self.origin.transform.rotation.z = q[2]
-        self.origin.transform.rotation.w = q[3]
+        rospy.loginfo(f'Request for change to cropbox location received')
+        self.origin = self.populate_tf(
+            req.x,
+            req.y,
+            req.z,
+            req.yaw,
+            req.pitch,
+            req.roll
+            )
 
         return SetCropBoxPoseResponse(True)
 
 
     def run(self):
         while not rospy.is_shutdown() or not self.kill_now:
-            rospy.loginfo_throttle(60, f"Cropbox Setter Node Up Awaiting Location")
+            rospy.loginfo_throttle(60, f'Cropbox Setter Node Up Awaiting Location')
             self.origin.header.stamp = rospy.Time.now()
             self.tf_publish(self.origin)
 
