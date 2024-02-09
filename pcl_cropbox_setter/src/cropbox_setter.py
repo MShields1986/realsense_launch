@@ -4,14 +4,6 @@
 import signal
 import numpy as np
 # Short-handing maths functions
-sqrt = np.sqrt
-sin = np.sin
-cos = np.cos
-tan = np.tan
-asin = np.arcsin
-acos = np.arccos
-atan = np.arctan
-atan2 = np.arctan2
 pi = np.pi
 to_rads = pi/180
 to_degs = 180/pi
@@ -35,41 +27,51 @@ class CropBoxSetter:
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         rospy.init_node('cropbox_setter', log_level=rospy.INFO)
-        rospy.loginfo(f'Cropbox Setter Node Starting...')
 
         self.ns = rospy.get_namespace()
+        self.node_name = rospy.get_name()
+
+        rospy.loginfo(f'{self.node_name} node starting...')
 
         self.rate = rospy.Rate(30)
 
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
 
-        self.service = rospy.Service('set_crop_box_pose', SetCropBoxPose, self.service_callback)
-        self.servicable_value = False
+        self.service = rospy.Service(f'{self.ns}set_crop_box_pose', SetCropBoxPose, self.service_callback)
 
-        # TODO: Set initial value from config file
+        while not rospy.has_param(f'{self.ns}cropbox_setter/'):
+            rospy.loginfo_throttle(5, f'Holding for cropbox parent frame parameters on {self.ns}cropbox_setter/')
+
+        self.parent_frame = rospy.get_param(f'{self.ns}cropbox_setter/parent_frame')
+        self.child_frame = rospy.get_param(f'{self.ns}cropbox_setter/child_frame')
+
+        x = rospy.get_param(f'{self.ns}cropbox_setter/x')
+        y = rospy.get_param(f'{self.ns}cropbox_setter/y')
+        z = rospy.get_param(f'{self.ns}cropbox_setter/z')
+        yaw = rospy.get_param(f'{self.ns}cropbox_setter/yaw')
+        pitch = rospy.get_param(f'{self.ns}cropbox_setter/pitch')
+        roll = rospy.get_param(f'{self.ns}cropbox_setter/roll')
+
         self.origin = self.populate_tf(
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
+            x,
+            y,
+            z,
+            yaw,
+            pitch,
+            roll
             )
 
-        self.x = self.y = self.z = 0
+        while not rospy.has_param(f'{self.ns}crop_box/'):
+            rospy.loginfo_throttle(5, f'Holding for cropbox size parameters on {self.ns}crop_box/')
 
-        while not rospy.has_param(f'{self.ns}crop_box/min_x'):
-            rospy.loginfo_throttle(5, f'Holding for cropbox size parameters on {self.ns}crop_box')
+        self.x = rospy.get_param(f'{self.ns}crop_box/max_x') - rospy.get_param(f'{self.ns}crop_box/min_x')
+        self.y = rospy.get_param(f'{self.ns}crop_box/max_y') - rospy.get_param(f'{self.ns}crop_box/min_y')
+        self.z = rospy.get_param(f'{self.ns}crop_box/max_z') - rospy.get_param(f'{self.ns}crop_box/min_z')
 
-        if rospy.has_param(f'{self.ns}crop_box/min_x'):
-            self.x = round(rospy.get_param(f'{self.ns}crop_box/max_x') - rospy.get_param(f'{self.ns}crop_box/min_x'), 3)
-            self.y = round(rospy.get_param(f'{self.ns}crop_box/max_y') - rospy.get_param(f'{self.ns}crop_box/min_y'), 3)
-            self.z = round(rospy.get_param(f'{self.ns}crop_box/max_z') - rospy.get_param(f'{self.ns}crop_box/min_z'), 3)
-
-            rospy.loginfo(f'Cropbox geometry...')
-            rospy.loginfo(f'x: {self.x}')
-            rospy.loginfo(f'y: {self.y}')
-            rospy.loginfo(f'z: {self.z}')
+        rospy.loginfo(f'Cropbox geometry...')
+        rospy.loginfo(f'x: {self.x:.3f}')
+        rospy.loginfo(f'y: {self.y:.3f}')
+        rospy.loginfo(f'z: {self.z:.3f}')
 
         self.marker_pub = rospy.Publisher(f'{self.ns}cropbox_marker', Marker, queue_size = 2, latch=True)
         self.populate_marker(self.x, self.y, self.z)
@@ -83,7 +85,7 @@ class CropBoxSetter:
         tf = TransformStamped()
 
         tf.header.stamp = rospy.Time.now()
-        tf.header.frame_id = f'{self.ns[:-1]}_link' #'base_link' #'map'
+        tf.header.frame_id = f'{self.ns[:-1]}_link' #'base_link' #'map' #'fixture'
         tf.child_frame_id = 'pcl_crop_box'
 
         tf.transform.translation.x = round(x, 3)
@@ -136,7 +138,10 @@ class CropBoxSetter:
         """
         Service to interactively set the frame of the crop box
         """
-        rospy.loginfo(f'Request for change to cropbox location received')
+        rospy.loginfo(f'-----------------------------')
+        rospy.loginfo(f'Request for change to cropbox location received, request is as follows...')
+        rospy.loginfo(req)
+
         self.origin = self.populate_tf(
             req.x,
             req.y,

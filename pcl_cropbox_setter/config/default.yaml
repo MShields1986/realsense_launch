@@ -1,0 +1,12 @@
+cropbox_setter:
+  #parent_frame: map
+  #parent_frame: base_link
+  parent_frame: rs_camera_1_link
+  child_frame: pcl_crop_box
+
+  x:  0.5
+  y: -0.2
+  z:  0.0
+  yaw:    0.0
+  pitch:  0.0
+  roll:   0.0

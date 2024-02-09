@@ -57,7 +57,21 @@
     </include>
 
 
+    <!-- Interactive Crop Box -->
+    <!--
     <node if="$(arg interactive_cropbox)" pkg="pcl_cropbox_setter" name="cropbox_setter" type="cropbox_setter.py" output="screen" />
+    -->
+ 
+  </group>
+
+
+  <!-- Interactive Crop Box -->
+  <group if="$(arg interactive_cropbox)">
+    <include file="$(find pcl_cropbox_setter)/launch/init.launch">
+      <arg name="name_space" value="$(arg name_space)"/>
+      <!--<arg name="configuration" value="$(arg name_space)"/>-->
+      <arg name="rviz" value="false"/>
+    </include>
   </group>
 
 
