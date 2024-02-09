@@ -85,8 +85,8 @@ class CropBoxSetter:
         tf = TransformStamped()
 
         tf.header.stamp = rospy.Time.now()
-        tf.header.frame_id = f'{self.ns[:-1]}_link' #'base_link' #'map' #'fixture'
-        tf.child_frame_id = 'pcl_crop_box'
+        tf.header.frame_id = self.parent_frame #f'{self.ns[:-1]}_link' #'base_link' #'map' #'fixture'
+        tf.child_frame_id = self.child_frame #'pcl_crop_box'
 
         tf.transform.translation.x = round(x, 3)
         tf.transform.translation.y = round(y, 3)
@@ -108,7 +108,7 @@ class CropBoxSetter:
     def populate_marker(self, x, y, z):
         self.marker = Marker()
         #self.marker.header.stamp = rospy.Time.now()
-        self.marker.header.frame_id = 'pcl_crop_box'
+        self.marker.header.frame_id = self.child_frame #'pcl_crop_box'
         self.marker.type = 1 # Cube
         self.marker.id = 0
 

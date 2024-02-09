@@ -9,7 +9,8 @@
   <arg name="name_space" default="rs_camera_1" />
   <arg name="cropping_config" default="camera_only.yaml" />
   <arg name="stand_alone" default="true" />
-  <arg name="interactive_cropbox" default="false" />
+  <arg name="interactive_cropbox" default="true" />
+  <!--<arg name="interactive_cropbox" default="false" />-->
 
 
   <!-- Camera Driver -->
@@ -36,37 +37,67 @@
   </include>
 
 
+  <!-- Nodelet Manager -->
+  <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager" ns="$(arg name_space)" />
+
+
+  <!-- Depth Image Pipeline to Create RGB Cloud -->
   <group ns="$(arg name_space)">
-    <!-- Nodelet Manager -->
-    <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager" />
-
-
-    <!-- Depth Image Pipeline to Create RGB Cloud -->
     <include file="$(find realsense_launch)/launch/depth_2_rgbcloud.launch">
       <arg name="external_manager" value="true"/>
       <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
     </include>
+  </group>
 
 
-    <!-- Pointcloud Processing Pipleine -->
+  <!-- Pointcloud Processing Pipleine 1 -->
+  <group ns="$(arg name_space)/pcl_pipeline_1">
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
+      <arg name="input_topic" value="$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
       <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
       <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" value="$(arg cropping_config)"/>
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
+    <param name="crop_box/input_frame" value="pcl_crop_box_1"/>
+  </group>
 
- 
+  <!-- Pointcloud Processing Pipleine 2 -->
+  <group ns="$(arg name_space)/pcl_pipeline_2">
+    <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
+      <arg name="input_topic" value="$(arg name_space)/color/pointcloud"/>
+      <arg name="external_manager" value="true"/>
+      <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
+      <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" value="$(arg cropping_config)"/>
+      <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
+    </include>
+    <param name="crop_box/input_frame" value="pcl_crop_box_2"/>
   </group>
 
 
-  <!-- Interactive Crop Box -->
+  <node pkg="tf" type="static_transform_publisher" name="fixture_1_tf" args="0.2 -0.15 0 0 0 0 /base_link /fixture_1 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="fixture_2_tf" args="0.2  0.15 0 0 0 0 /base_link /fixture_2 100"/>
+
+
+  <!-- Interactive Crop Box 1 -->
   <group if="$(arg interactive_cropbox)">
     <include file="$(find pcl_cropbox_setter)/launch/init.launch">
-      <arg name="name_space" value="$(arg name_space)"/>
-      <!--<arg name="configuration" value="$(arg name_space)"/>-->
+      <arg name="name_space" value="$(arg name_space)/pcl_pipeline_1"/>
+      <arg name="configuration" value="fixture_1.yaml"/>
       <arg name="rviz" value="false"/>
     </include>
+    <param name="$(arg name_space)/pcl_pipeline_1/cropbox_setter/child_frame" value="pcl_crop_box_1"/>
+  </group>
+
+
+  <!-- Interactive Crop Box 2 -->
+  <group if="$(arg interactive_cropbox)">
+    <include file="$(find pcl_cropbox_setter)/launch/init.launch">
+      <arg name="name_space" value="$(arg name_space)/pcl_pipeline_2"/>
+      <arg name="configuration" value="fixture_2.yaml"/>
+      <arg name="rviz" value="false"/>
+    </include>
+    <param name="$(arg name_space)/pcl_pipeline_2/cropbox_setter/child_frame" value="pcl_crop_box_2"/>
   </group>
 
 
@@ -92,7 +123,7 @@
 
   <!-- RViz -->
   <group if="$(arg rviz)">
-    <node if="$(arg interactive_cropbox)" type="rviz" name="rviz" pkg="rviz" args="-d $(find realsense_launch)/rviz/viewer_interactive_cropbox.rviz" />
+    <node if="$(arg interactive_cropbox)" type="rviz" name="rviz" pkg="rviz" args="-d $(find realsense_launch)/rviz/viewer_interactive_cropbox_multiple_cropbox.rviz" />
     <node unless="$(arg interactive_cropbox)" type="rviz" name="rviz" pkg="rviz" args="-d $(find realsense_launch)/rviz/viewer.rviz" />
   </group>
 
