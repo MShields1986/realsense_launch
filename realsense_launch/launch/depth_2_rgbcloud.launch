@@ -7,6 +7,14 @@
   <!-- Nodelet Manager -->
   <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
 
+  <!-- Rectify RGB Image -->
+  <node pkg="nodelet" type="nodelet" name="rectify_color"
+    args="load image_proc/rectify $(arg nodelet_manager_name)">
+    <remap from="camera_info" to="color/camera_info" />
+    <remap from="image_mono" to="color/image_raw" />
+    <remap from="image_rect" to="color/image_rect" />
+  </node>
+
   <!-- Depth Image Pipeline to Create RGB Cloud -->
   <node pkg="nodelet" type="nodelet" name="register_depth_2_rgb"
         args="load depth_image_proc/register $(arg nodelet_manager_name)">
@@ -23,7 +31,7 @@
         args="load depth_image_proc/point_cloud_xyzrgb $(arg nodelet_manager_name)">
 
     <remap from="rgb/camera_info" to="color/camera_info"/>
-    <remap from="rgb/image_rect_color" to="color/image_raw"/>
+    <remap from="rgb/image_rect_color" to="color/image_rect"/>
     <remap from="depth_registered/image_rect" to="depth/registered/image_rect_raw"/>
 
     <remap from="depth_registered/points" to="color/pointcloud"/>
