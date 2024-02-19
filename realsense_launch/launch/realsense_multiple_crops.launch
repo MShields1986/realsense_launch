@@ -52,7 +52,7 @@
   <!-- Pointcloud Processing Pipleine 1 -->
   <group ns="$(arg name_space)/pcl_pipeline_1">
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
-      <arg name="input_topic" value="$(arg name_space)/color/pointcloud"/>
+      <arg name="input_topic" value="/$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
       <!-- Need to use global path to nodelet manager when nodelets are in a separate namespace -->
       <arg name="nodelet_manager_name" value="/$(arg name_space)/$(arg nodelet_manager_name)"/>
@@ -64,7 +64,7 @@
   <!-- Pointcloud Processing Pipleine 2 -->
   <group ns="$(arg name_space)/pcl_pipeline_2">
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
-      <arg name="input_topic" value="$(arg name_space)/color/pointcloud"/>
+      <arg name="input_topic" value="/$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
       <!-- Need to use global path to nodelet manager when nodelets are in a separate namespace -->
       <arg name="nodelet_manager_name" value="/$(arg name_space)/$(arg nodelet_manager_name)"/>
