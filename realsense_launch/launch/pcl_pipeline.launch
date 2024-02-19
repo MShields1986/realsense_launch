@@ -11,6 +11,7 @@
     <arg if="$(arg interactive_cropbox)" name="cropping_configuration" default="camera_only_interactive_cropbox.yaml" />
     <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" default="camera_only.yaml" />
 
+
     <!-- Nodelet Manager -->
     <node unless="$(arg external_manager)" pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager"/>
 

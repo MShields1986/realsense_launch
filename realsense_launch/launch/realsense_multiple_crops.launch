@@ -7,7 +7,6 @@
   <arg name="fps" default="15" />
   <arg name="rviz" default="true" />
   <arg name="name_space" default="rs_camera_1" />
-  <arg name="cropping_config" default="camera_only.yaml" />
   <arg name="stand_alone" default="true" />
   <arg name="interactive_cropbox" default="true" />
   <!--<arg name="interactive_cropbox" default="false" />-->
@@ -55,8 +54,8 @@
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
       <arg name="input_topic" value="$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
-      <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
-      <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" value="$(arg cropping_config)"/>
+      <!-- Need to use global path to nodelet manager when nodelets are in a separate namespace -->
+      <arg name="nodelet_manager_name" value="/$(arg name_space)/$(arg nodelet_manager_name)"/>
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
     <param name="crop_box/input_frame" value="pcl_crop_box_1"/>
@@ -67,8 +66,8 @@
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
       <arg name="input_topic" value="$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
-      <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
-      <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" value="$(arg cropping_config)"/>
+      <!-- Need to use global path to nodelet manager when nodelets are in a separate namespace -->
+      <arg name="nodelet_manager_name" value="/$(arg name_space)/$(arg nodelet_manager_name)"/>
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
     <param name="crop_box/input_frame" value="pcl_crop_box_2"/>

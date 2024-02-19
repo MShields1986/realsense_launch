@@ -7,7 +7,6 @@
   <arg name="fps" default="15" />
   <arg name="rviz" default="true" />
   <arg name="name_space" default="rs_camera_1" />
-  <arg name="cropping_config" default="camera_only.yaml" />
   <arg name="stand_alone" default="true" />
   <arg name="interactive_cropbox" default="false" />
 
