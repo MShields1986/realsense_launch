@@ -52,7 +52,6 @@
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
       <arg name="external_manager" value="true"/>
       <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
-      <arg unless="$(arg interactive_cropbox)" name="cropping_configuration" value="$(arg cropping_config)"/>
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
 
@@ -64,7 +63,7 @@
   <group if="$(arg interactive_cropbox)">
     <include file="$(find pcl_cropbox_setter)/launch/init.launch">
       <arg name="name_space" value="$(arg name_space)"/>
-      <!--<arg name="configuration" value="$(arg name_space)"/>-->
+      <arg name="configuration" value="fixture_1.yaml"/>
       <arg name="rviz" value="false"/>
     </include>
   </group>

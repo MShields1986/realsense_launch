@@ -75,10 +75,6 @@
   </group>
 
 
-  <node pkg="tf" type="static_transform_publisher" name="fixture_1_tf" args="0.2 -0.15 0 0 0 0 /base_link /fixture_1 100"/>
-  <node pkg="tf" type="static_transform_publisher" name="fixture_2_tf" args="0.2  0.15 0 0 0 0 /base_link /fixture_2 100"/>
-
-
   <!-- Interactive Crop Box 1 -->
   <group if="$(arg interactive_cropbox)">
     <include file="$(find pcl_cropbox_setter)/launch/init.launch">

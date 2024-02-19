@@ -1,6 +1,6 @@
 cropbox_setter:
   parent_frame: fixture_2
-  child_frame: pcl_crop_box
+  child_frame: pcl_crop_box_2
 
   x:  0.2
   y:  0.1
