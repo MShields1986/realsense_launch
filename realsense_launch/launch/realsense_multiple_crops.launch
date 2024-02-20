@@ -52,6 +52,7 @@
   <!-- Pointcloud Processing Pipleine 1 -->
   <group ns="$(arg name_space)/pcl_pipeline_1">
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
+      <!-- Need to use global input topic name when nodelets are in a separate namespace -->
       <arg name="input_topic" value="/$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
       <!-- Need to use global path to nodelet manager when nodelets are in a separate namespace -->
@@ -59,11 +60,15 @@
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
     <param name="crop_box/input_frame" value="pcl_crop_box_1"/>
+    <param name="crop_box/max_x" value="1.8"/>
+    <param name="crop_box/max_y" value="0.8"/>
+    <param name="crop_box/max_z" value="0.3"/>
   </group>
 
   <!-- Pointcloud Processing Pipleine 2 -->
   <group ns="$(arg name_space)/pcl_pipeline_2">
     <include file="$(find realsense_launch)/launch/pcl_pipeline.launch">
+      <!-- Need to use global input topic name when nodelets are in a separate namespace -->
       <arg name="input_topic" value="/$(arg name_space)/color/pointcloud"/>
       <arg name="external_manager" value="true"/>
       <!-- Need to use global path to nodelet manager when nodelets are in a separate namespace -->
@@ -71,6 +76,9 @@
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
     <param name="crop_box/input_frame" value="pcl_crop_box_2"/>
+    <param name="crop_box/max_x" value="1.5"/>
+    <param name="crop_box/max_y" value="0.5"/>
+    <param name="crop_box/max_z" value="0.1"/>
   </group>
 
 
