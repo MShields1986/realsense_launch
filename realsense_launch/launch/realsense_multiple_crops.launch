@@ -22,14 +22,37 @@
     <arg name="enable_sync" value="true"/>
     <arg name="align_depth" value="true"/>
 
+    <!-- Depth -->
+    <!-- Max Resolution -->
+    <!--
+    <arg name="depth_width" value="1280"/>
+    <arg name="depth_height" value="720"/>
+    -->
+    <!-- Low Resolution -->
     <arg name="depth_width" value="640"/>
     <arg name="depth_height" value="480"/>
+
     <arg name="depth_fps" value="$(arg fps)"/>
 
+    <!-- Color -->
+    <!-- x1 Low Depth Resolution -->
+    <!--
     <arg name="color_width" value="640"/>
     <arg name="color_height" value="480"/>
+    -->
+    <!-- Max Resolution -->
+    
+    <arg name="color_width" value="1920"/>
+    <arg name="color_height" value="1080"/>
+    <!---->
+    <!-- x2 Low Depth Resolution -->
+    <!--
+    <arg name="color_width" value="1280"/>
+    <arg name="color_height" value="720"/>
+    -->
     <arg name="color_fps" value="$(arg fps)"/>
 
+    <!-- Pointcloud -->
     <!-- Dropped these as pointcloud output doesn't appear to work for the Noetic driver-->
     <!--<arg name="pointcloud" value="true"/>-->
     <!--<arg name="ordered_pc" value="true"/>-->
