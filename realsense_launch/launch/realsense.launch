@@ -53,8 +53,11 @@
       <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
       <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
     </include>
+    <!--<param name="crop_box/input_frame" value="pcl_crop_box_1"/>-->
+    <param name="crop_box/max_x" value="1.9"/>
+    <param name="crop_box/max_y" value="0.65"/>
+    <param name="crop_box/max_z" value="0.4"/>
 
- 
   </group>
 
 
