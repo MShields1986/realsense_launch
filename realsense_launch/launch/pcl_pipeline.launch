@@ -82,8 +82,8 @@
         negative: False
         </rosparam>-->
         <rosparam>
-        mean_k: 10
-        stddev:  0.05
+        mean_k: 50
+        stddev:  0.2
         negative: False
         </rosparam>
     </node>
@@ -91,6 +91,7 @@
 
     <!-- Normal Estimation -->
     <!-- https://wiki.ros.org/pcl_ros/Tutorials/SACSegmentationFromNormals%20planar%20segmentation -->
+    <!--
     <node pkg="nodelet" type="nodelet" name="normal_estimation" args="load pcl/NormalEstimation $(arg nodelet_manager_name)" output="screen">
         <remap from="~input" to="outlier_removal/output" />
         <rosparam>
@@ -101,6 +102,7 @@
         spatial_locator: 0
         </rosparam>
     </node>
+    -->
 
 
 </launch>
