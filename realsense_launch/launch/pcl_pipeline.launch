@@ -74,19 +74,21 @@
 
 
     <!-- Outlier Removal -->
-    <node pkg="nodelet" type="nodelet" name="outlier_removal" args="load pcl/StatisticalOutlierRemoval $(arg nodelet_manager_name)" output="screen">
+    <!-- <node pkg="nodelet" type="nodelet" name="outlier_removal" args="load pcl/StatisticalOutlierRemoval $(arg nodelet_manager_name)" output="screen">
         <remap from="~input" to="voxel_grid/output" />
+
+        <rosparam>
+        mean_k: 50
+        stddev:  0.4
+        negative: False
+        </rosparam>
+    </node>-->
+
         <!--<rosparam>
         mean_k: 300
         stddev:  0.005
         negative: False
         </rosparam>-->
-        <rosparam>
-        mean_k: 50
-        stddev:  0.2
-        negative: False
-        </rosparam>
-    </node>
 
 
     <!-- Normal Estimation -->
