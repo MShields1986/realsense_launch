@@ -4,7 +4,8 @@ cropbox_setter:
 
   #x: -0.9  # horizontal
   #x: -0.2  # horizontal
-  x: -0.8  # horizontal
+  #x: -0.8  # horizontal
+  x: -0.7  # horizontal
   y: -1.25 # vertical
   z: -0.3
   yaw:    0.0
