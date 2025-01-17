@@ -8,7 +8,10 @@
   <arg name="rviz" default="true" />
   <arg name="name_space" default="rs_camera_1" />
   <arg name="stand_alone" default="true" />
+
   <arg name="interactive_cropbox" default="false" />
+  <arg name="interactive_cropbox_config" default="fixture_1.yaml" />
+
   <arg name="3D" default="true" />
 
 
@@ -55,12 +58,14 @@
         <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
         <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
       </include>
-      <!--<param name="crop_box/input_frame" value="pcl_crop_box_1"/>-->
-      <!--<param name="crop_box/max_x" value="1.4"/>-->
-      <!--<param name="crop_box/max_x" value="1.62"/>-->
-      <param name="crop_box/max_x" value="1.5"/>
-      <param name="crop_box/max_y" value="0.5"/>
-      <param name="crop_box/max_z" value="0.4"/>
+      <!--<param name="crop_box/input_frame" value="pcl_crop_box_1"/>--> <!-- 737 EC sample -->
+      <!--<param name="crop_box/max_x" value="1.5"/>--> <!-- 737 EC sample -->
+      <!--<param name="crop_box/max_y" value="0.5"/>--> <!-- 737 EC sample -->
+      <!--<param name="crop_box/max_z" value="0.4"/>--> <!-- 737 EC sample -->
+      <param name="crop_box/input_frame" value="pcl_crop_box_2"/> <!-- Wing Cover UT sample -->
+      <param name="crop_box/max_x" value="2.10"/> <!-- Wing Cover UT sample -->
+      <param name="crop_box/max_y" value="0.65"/> <!-- Wing Cover UT sample -->
+      <param name="crop_box/max_z" value="0.45"/> <!-- Wing Cover UT sample -->
     </group>
 
   </group>
@@ -70,7 +75,7 @@
   <group if="$(arg interactive_cropbox)">
     <include file="$(find pcl_cropbox_setter)/launch/init.launch">
       <arg name="name_space" value="$(arg name_space)"/>
-      <arg name="configuration" value="fixture_1.yaml"/>
+      <arg name="configuration" value="$(arg interactive_cropbox_config)"/>
       <arg name="rviz" value="false"/>
     </include>
   </group>

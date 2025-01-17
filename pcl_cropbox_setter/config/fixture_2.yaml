@@ -2,9 +2,9 @@ cropbox_setter:
   parent_frame: fixture_2
   child_frame: pcl_crop_box_2
 
-  x:  0.3
-  y: -1.0
-  z:  0.0
+  x: -1.4  # horizontal
+  y: -1.35 # vertical
+  z: -0.35
   yaw:    0.0
   pitch:  0.0
   roll:   0.0

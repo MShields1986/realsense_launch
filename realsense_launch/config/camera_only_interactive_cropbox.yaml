@@ -3,6 +3,7 @@ crop_box:
   # Frame crop box is defined in
   # Ought to be set to pcl_crop_box for interactive cropbox
   input_frame: pcl_crop_box_1
+  #input_frame: pcl_crop_box_2
   # Frame data is to be output in
   output_frame: rs_camera_1_color_optical_frame
 
