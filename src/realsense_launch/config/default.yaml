@@ -1,0 +1,25 @@
+#serial_no: 
+device_type: d435
+reconnect_timeout: 10
+initial_reset: true
+
+rgb_camera.color_profile: 1280x720x15
+depth_module.depth_profile: 848x480x15
+
+enable_color: true
+enable_depth: true
+enable_infra: false
+enable_infra1: true
+enable_infra2: true
+enable_sync: true
+pointcloud.enable: true
+enable_rgbd: true
+align_depth.enable: true
+#clip_distance: 1.5 # m
+
+publish_tf: true
+tf_publish_rate: 1.0
+
+enable_gyro: true
+enable_accel: true
+unite_imu_method: 1 # 0-None, 1-copy, 2-linear_interpolation
