@@ -1,0 +1,27 @@
+name: realsense_launch
+
+services:
+  realsense_launch:
+    environment:
+      - realsense_launch
+      - DISPLAY
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    #deploy:
+    #  resources:
+    #    limits:
+    #      cpus: '0.001'
+    #      memory: 500M
+    #    reservations:
+    #      cpus: '0.0001'
+    #      memory: 100M
+    privileged: true
+    network_mode: host
+    ipc: host
+    volumes:
+      - $XAUTHORITY:/root/.Xauthority
+      - ../src:/ros2_ws/src
+    #command: sleep infinity
+    command: ros2 launch realsense_launch init.launch.py
+    #restart: unless-stopped
