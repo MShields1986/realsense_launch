@@ -13,9 +13,13 @@ set(
     ament_cmake
     rclcpp
     rclcpp_components
-#    ros-humble-realsense2-camera
-#    ros-humble-realsense2-camera-msgs
-#    ros-humble-realsense2-description
+    image_proc
+    depth_image_proc
+    rosbag2
+    rosbag2_transport
+    realsense2_camera
+    realsense2_camera_msgs
+    realsense2_description
     ament_index_cpp
   )
 

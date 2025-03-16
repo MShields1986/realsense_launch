@@ -1,8 +1,9 @@
-#import os
-#from ament_index_python.packages import get_package_share_directory
+import os
+from ament_index_python.packages import get_package_share_directory
+import yaml
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
 
@@ -12,11 +13,17 @@ from launch_ros.substitutions import FindPackageShare
 
 package_dir = FindPackageShare('realsense_launch')
 
-#config = os.path.join(
+#rs_config = os.path.join(
 #      get_package_share_directory('realsense_launch'),
 #      'config',
-#      'default.yaml'
+#      'rs_default.yaml'
 #      )
+
+rosbag_config = os.path.join(
+    get_package_share_directory('realsense_launch'),
+    'config',
+    'record_default.yaml'
+    )
 
 launch_params = [{'name': 'rviz', 'default': 'true', 'description': 'flag to run RViz'}]
 
@@ -42,13 +49,17 @@ realsense_node_params = [{'name': 'serial_no',                    'default': '',
                          {'name': 'enable_rgbd',                  'default': 'false',        'description': 'enable rgbd topic'},
                          {'name': 'align_depth.enable',           'default': 'false',        'description': 'enable align depth filter'},
                          {'name': 'publish_tf',                   'default': 'true',        'description': '[bool] enable/disable publishing static & dynamic TF'},
-                         {'name': 'tf_publish_rate',              'default': '30.0',         'description': '[double] rate in HZ for publishing dynamic TF'},
+                         {'name': 'tf_publish_rate',              'default': '200.0',         'description': '[double] rate in HZ for publishing dynamic TF'},
                          #{'name': 'config_file',                  'default': [config],      'description': 'yaml config file'},
                         ]
 
 register_node_params = [{'name': 'queue_size', 'default': '30', 'description': 'size of message queue for synchronizing subscribed topics'}]
 
 xyzrgb_points_node_params = [{'name': 'queue_size', 'default': '30', 'description': 'size of message queue for synchronizing subscribed topics'}]
+
+def dump_params(param_file_path, node_name):
+    with open(param_file_path, 'r') as file:
+        return [yaml.safe_load(file)[node_name]['ros__parameters']]
 
 def declare_configurable_parameters(parameters):
     return [DeclareLaunchArgument(param['name'], default_value=param['default'], description=param['description']) for param in parameters]
@@ -75,6 +86,7 @@ def generate_launch_description():
                                                            parameters=[set_configurable_parameters(realsense_node_params)],
                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
+                                            # https://docs.ros.org/en/rolling/p/image_proc/doc/components.html
                                             ComposableNode(package='image_proc',
                                                            namespace='',
                                                            plugin='image_proc::RectifyNode',
@@ -83,6 +95,7 @@ def generate_launch_description():
                                                                        ('image', '/camera/color/image_raw'),
                                                                        ('image_rect', '/camera/color/image_rect')],
                                                            ),
+                                            # https://docs.ros.org/en/rolling/p/depth_image_proc/doc/components.html
                                             ComposableNode(package='depth_image_proc',
                                                            namespace='',
                                                            plugin='depth_image_proc::RegisterNode',
@@ -105,7 +118,13 @@ def generate_launch_description():
                                                                        ('rgb/camera_info', '/camera/color/camera_info'),
                                                                        ('points', '/camera/color/pointcloud'),
                                                                        ],
-                                                           )
+                                                           ),
+                                            ComposableNode(package='rosbag2_transport',
+                                                           plugin='rosbag2_transport::Recorder',
+                                                           name='recorder',
+                                                           parameters=dump_params(rosbag_config, "recorder"),
+                                                           extra_arguments=[{'use_intra_process_comms': True}]
+                                                        )
                                 ],
                                 output='screen',
                                 arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
@@ -117,6 +136,17 @@ def generate_launch_description():
                      output='screen',
                      arguments=['-d', PathJoinSubstitution([package_dir, 'rviz', 'template.rviz'])],
                      condition=IfCondition(LaunchConfiguration('rviz')),
-                     )
-        ]
+                     )#,
+        #Node(package='rosbag2_transport',
+        #     executable='recorder',
+        #     name='recorder',
+        #     output="screen",
+        #     parameters=[rosbag_config],
+        #     ),
+        ]# + 
+        #[
+        #ExecuteProcess(cmd=['ros2', 'bag', 'record', '-a'],
+        #               output='screen'
+        #               )
+        #]
         )

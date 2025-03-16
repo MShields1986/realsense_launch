@@ -11,9 +11,13 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>ros-humble-realsense2-camera</depend>
-  <depend>ros-humble-realsense2-camera-msgs</depend>
-  <depend>ros-humble-realsense2-description</depend>
+  <depend>image_proc</depend>
+  <depend>depth_image_proc</depend>
+  <depend>rosbag2</depend>
+  <depend>rosbag2_transport</depend>
+  <depend>realsense2_camera</depend>
+  <depend>realsense2_camera_msgs</depend>
+  <depend>realsense2_description</depend>
   <depend>ament_index_cpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>

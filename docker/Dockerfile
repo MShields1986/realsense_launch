@@ -17,9 +17,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
   && apt-get install -y \
   ros-humble-realsense2-* \
-  #ros-humble-realsense2-camera \
-  #ros-humble-realsense2-camera-msgs \
-  #ros-humble-realsense2-description \
+  ros-humble-rosbag2 \
+  ros-humble-rosbag2-transport \
   ros-humble-image-pipeline
 
 COPY ../src /ros2_ws/src
