@@ -77,7 +77,7 @@ def generate_launch_description():
         ComposableNodeContainer(name='realsense_container',
                                 namespace='',
                                 package='rclcpp_components',
-                                executable='component_container',
+                                executable='component_container_mt',
                                 composable_node_descriptions=[
                                             ComposableNode(package='realsense2_camera',
                                                            namespace='',
@@ -94,6 +94,7 @@ def generate_launch_description():
                                                            remappings=[('camera_info', '/camera/color/camera_info'),
                                                                        ('image', '/camera/color/image_raw'),
                                                                        ('image_rect', '/camera/color/image_rect')],
+                                                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             # https://docs.ros.org/en/rolling/p/depth_image_proc/doc/components.html
                                             ComposableNode(package='depth_image_proc',
@@ -107,6 +108,7 @@ def generate_launch_description():
                                                                        ('depth_registered/camera_info', '/camera/depth_registered/camera_info'),
                                                                        ('depth_registered/image_rect', '/camera/depth_registered/image_rect_raw'),
                                                                        ],
+                                                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='depth_image_proc',
                                                            namespace='',
@@ -118,7 +120,12 @@ def generate_launch_description():
                                                                        ('rgb/camera_info', '/camera/color/camera_info'),
                                                                        ('points', '/camera/color/pointcloud'),
                                                                        ],
+                                                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
+                                            #https://github.com/ros2/rosbag2?tab=readme-ov-file#using-with-composition
+                                            # Currently Fails
+                                            # [component_container_mt-1] [ERROR] [1742143013.373511351] [realsense_container]: Could not find requested resource in ament index
+                                            # [ERROR] [launch_ros.actions.load_composable_nodes]: Failed to load node 'recorder' of type 'rosbag2::Recorder' in container '/realsense_container': Could not find requested resource in ament index
                                             ComposableNode(package='rosbag2_transport',
                                                            plugin='rosbag2_transport::Recorder',
                                                            name='recorder',
