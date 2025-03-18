@@ -2,14 +2,14 @@
 FROM osrf/ros:humble-desktop-full
 
 # Switch to cyclonedds
-#RUN apt update \
-#  && apt install -y \
-#  ros-humble-rmw-cyclonedds-cpp
-#ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+RUN apt update \
+  && apt install -y \
+  ros-humble-rmw-cyclonedds-cpp
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 #ENV CYCLONEDDS_URI="<CycloneDDS><Domain><General><AllowMulticast>true</AllowMulticast><Interfaces><NetworkInterface address='10.1.1.0' /></Interfaces></General></Domain></CycloneDDS>"
 # Increase buffer size as recommended by rmw_cyclonedds_cpp
-#RUN echo 'net.core.rmem_max=2147483647' >> /etc/sysctl.conf
-#RUN echo 'net.core.rmem_default=8388608' >> /etc/sysctl.conf
+RUN echo 'net.core.rmem_max=2147483647' >> /etc/sysctl.conf
+RUN echo 'net.core.rmem_default=8388608' >> /etc/sysctl.conf
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
