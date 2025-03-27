@@ -15,16 +15,7 @@
     <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager" />
 
     <!-- Camera Driver -->
-    <node pkg="nodelet" type="nodelet" name="voxel_grid" args="load zivid_camera/nodelet $(arg nodelet_manager_name)" output="screen">
-        <!--<remap from="~input" to="crop_box/output" />-->
-        <!-- <rosparam>
-        filter_field_name: z
-        filter_limit_min: 0.01
-        filter_limit_max: 1.5
-        filter_limit_negative: False
-        leaf_size: 0.005
-        </rosparam> -->
-    </node>
+    <node pkg="nodelet" type="nodelet" name="zivid_camera" args="load zivid_camera/nodelet $(arg nodelet_manager_name)" output="screen" />
 
     <!-- Pointcloud Processing Pipleine -->
     <group if="$(arg 3D)">
