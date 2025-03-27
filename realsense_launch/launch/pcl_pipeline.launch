@@ -22,10 +22,10 @@
 
     <!-- Bounding Box -->
     <node pkg="nodelet" type="nodelet" name="crop_box" args="load pcl/CropBox $(arg nodelet_manager_name)" output="screen">
-        <!-- <remap from="~input" to="$(arg input_topic)" /> -->
-        <remap from="~input" to="voxel_grid/output" />
+        <remap from="~input" to="$(arg input_topic)" />
+        <!-- <remap from="~input" to="voxel_grid/output" /> -->
 
-        <!-- <param name="keep_organized" type="bool" value="true" /> -->
+        <param name="keep_organized" type="bool" value="true" />
 
         <!--
         <remap from="~input_frame" to="crop/dim_input_frame" />
@@ -63,8 +63,8 @@
     <!-- Voxel Grid -->
     <!-- Be aware this step removes order/structure -->
     <node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid $(arg nodelet_manager_name)" output="screen">
-        <!-- <remap from="~input" to="crop_box/output" /> -->
-        <remap from="~input" to="$(arg input_topic)" />
+        <remap from="~input" to="crop_box/output" />
+        <!-- <remap from="~input" to="$(arg input_topic)" /> -->
         <rosparam>
         filter_field_name: z
         filter_limit_min: 0.01
