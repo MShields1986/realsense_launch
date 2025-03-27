@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <arg name="nodelet_manager_name" default="rs_pipeline_manager" />
-  <arg name="device_type" default="d435i" />
-  <!--<arg name="device_type" default="d435" />-->
-  <!--<arg name="device_type" default="d415" />-->
-  <arg name="fps" default="15" />
+  <arg name="nodelet_manager_name" default="zivid_pipeline_manager" />
   <arg name="rviz" default="true" />
-  <arg name="name_space" default="rs_camera_1" />
+  <arg name="name_space" default="zivid_camera" />
   <arg name="stand_alone" default="true" />
 
   <arg name="interactive_cropbox" default="false" />
@@ -14,42 +10,21 @@
 
   <arg name="3D" default="true" />
 
-
-  <!-- Camera Driver -->
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    <arg name="external_manager" value="true"/>
-    <arg name="manager" value="$(arg nodelet_manager_name)"/>
-    <arg name="camera" value="$(arg name_space)"/> <!-- namespace for camera -->    
-    <arg name="device_type" value="$(arg device_type)"/>
-    <arg name="initial_reset" value="true"/>
-    <arg name="enable_sync" value="true"/>
-    <arg name="align_depth" value="true"/>
-
-    <arg name="depth_width" value="640"/>
-    <arg name="depth_height" value="480"/>
-    <arg name="depth_fps" value="$(arg fps)"/>
-
-    <arg name="color_width" value="640"/>
-    <arg name="color_height" value="480"/>
-    <arg name="color_fps" value="$(arg fps)"/>
-
-    <!-- Dropped these as pointcloud output doesn't appear to work for the Noetic driver-->
-    <!--<arg name="pointcloud" value="true"/>-->
-    <!--<arg name="ordered_pc" value="true"/>-->
-  </include>
-
-
   <group ns="$(arg name_space)">
     <!-- Nodelet Manager -->
     <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager_name)" args="manager" />
 
-
-    <!-- Depth Image Pipeline to Create RGB Cloud -->
-    <include file="$(find realsense_launch)/launch/depth_2_rgbcloud.launch">
-      <arg name="external_manager" value="true"/>
-      <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
-    </include>
-
+    <!-- Camera Driver -->
+    <node pkg="nodelet" type="nodelet" name="voxel_grid" args="load zivid_camera/nodelet $(arg nodelet_manager_name)" output="screen">
+        <!--<remap from="~input" to="crop_box/output" />-->
+        <!-- <rosparam>
+        filter_field_name: z
+        filter_limit_min: 0.01
+        filter_limit_max: 1.5
+        filter_limit_negative: False
+        leaf_size: 0.005
+        </rosparam> -->
+    </node>
 
     <!-- Pointcloud Processing Pipleine -->
     <group if="$(arg 3D)">
@@ -57,15 +32,20 @@
         <arg name="external_manager" value="true"/>
         <arg name="nodelet_manager_name" value="$(arg nodelet_manager_name)"/>
         <arg name="interactive_cropbox" value="$(arg interactive_cropbox)"/>
+        <arg name="input_topic" value="points/xyzrgba"/>
       </include>
-      <!--<param name="crop_box/input_frame" value="pcl_crop_box_1"/>--> <!-- 737 EC sample -->
-      <!--<param name="crop_box/max_x" value="1.5"/>--> <!-- 737 EC sample -->
-      <!--<param name="crop_box/max_y" value="0.5"/>--> <!-- 737 EC sample -->
-      <!--<param name="crop_box/max_z" value="0.4"/>--> <!-- 737 EC sample -->
-      <param name="crop_box/input_frame" value="pcl_crop_box_2"/> <!-- Wing Cover UT sample -->
-      <param name="crop_box/max_x" value="2.10"/> <!-- Wing Cover UT sample -->
-      <param name="crop_box/max_y" value="0.65"/> <!-- Wing Cover UT sample -->
-      <param name="crop_box/max_z" value="0.45"/> <!-- Wing Cover UT sample -->
+
+      <!-- 737 EC Sample -->
+      <!--<param name="crop_box/input_frame" value="pcl_crop_box_1"/>-->
+      <!--<param name="crop_box/max_x" value="1.5"/>-->
+      <!--<param name="crop_box/max_y" value="0.5"/>-->
+      <!--<param name="crop_box/max_z" value="0.4"/>-->
+
+      <!-- Wing Cover UT sample -->
+      <param name="crop_box/input_frame" value="pcl_crop_box_2"/>
+      <param name="crop_box/max_x" value="2.10"/>
+      <param name="crop_box/max_y" value="0.65"/>
+      <param name="crop_box/max_z" value="0.45"/>
     </group>
 
   </group>
