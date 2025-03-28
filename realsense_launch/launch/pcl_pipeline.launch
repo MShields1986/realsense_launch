@@ -65,10 +65,19 @@
     <node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid $(arg nodelet_manager_name)" output="screen">
         <remap from="~input" to="crop_box/output" />
         <!-- <remap from="~input" to="$(arg input_topic)" /> -->
-        <rosparam>
+        <!-- RealSense -->
+        <!-- <rosparam>
         filter_field_name: z
         filter_limit_min: 0.01
         filter_limit_max: 1.5
+        filter_limit_negative: False
+        leaf_size: 0.005
+        </rosparam> -->
+        <!-- Zivid Two M70 -->
+        <rosparam>
+        filter_field_name: z
+        filter_limit_min: 0.01
+        filter_limit_max: 2.5
         filter_limit_negative: False
         leaf_size: 0.005
         </rosparam>
