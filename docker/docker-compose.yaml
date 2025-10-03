@@ -16,12 +16,17 @@ services:
     #    reservations:
     #      cpus: '0.0001'
     #      memory: 100M
-    privileged: true
+    # privileged: true
     network_mode: host
     ipc: host
     volumes:
+      - /dev:/dev
       - $XAUTHORITY:/root/.Xauthority
       - ../src:/ros2_ws/src
+    tty: true
+    device_cgroup_rules:
+      - 'c 81:* rmw'
+      - 'c 189:* rmw'
     #command: sleep infinity
     command: ros2 launch realsense_launch init.launch.py
     #restart: unless-stopped

@@ -1,5 +1,5 @@
 # realsense_launch
-ROS Humble package for launching the Intel RealSense camera driver alongside an intraprocess image pipeline.
+ROS 2 package for launching the Intel RealSense camera driver alongside an intraprocess image pipeline.
 
 ## Installation
 ```bash
@@ -11,6 +11,3 @@ Quick start with Docker compose
 cd realsense_launch
 ./run.sh
 ```
-
-## Usage
-`TODO`

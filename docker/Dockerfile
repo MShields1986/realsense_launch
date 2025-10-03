@@ -1,36 +1,44 @@
-#FROM ros:humble-ros-base
-FROM osrf/ros:humble-desktop-full
+ARG ROS_DISTRO=jazzy
+#ARG SUBNET='10.1.1.0'
 
-# Switch to cyclonedds
-#RUN apt update \
-#  && apt install -y \
-#  ros-humble-rmw-cyclonedds-cpp
-#ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-#ENV CYCLONEDDS_URI="<CycloneDDS><Domain><General><AllowMulticast>true</AllowMulticast><Interfaces><NetworkInterface address='10.1.1.0' /></Interfaces></General></Domain></CycloneDDS>"
-# Increase buffer size as recommended by rmw_cyclonedds_cpp
-#RUN echo 'net.core.rmem_max=2147483647' >> /etc/sysctl.conf
-#RUN echo 'net.core.rmem_default=8388608' >> /etc/sysctl.conf
+#FROM ros:$ROS_DISTRO-ros-base
+FROM osrf/ros:$ROS_DISTRO-desktop-full
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Switch to cyclonedds
+RUN apt update \
+  && apt install -y \
+  ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+#ENV CYCLONEDDS_URI="<CycloneDDS><Domain><General><AllowMulticast>true</AllowMulticast><Interfaces><NetworkInterface address=$SUBNET /></Interfaces></General></Domain></CycloneDDS>"
+
+# Increase buffer size as recommended by rmw_cyclonedds_cpp
+RUN echo 'net.core.rmem_max=2147483647' >> /etc/sysctl.conf
+RUN echo 'net.core.rmem_default=8388608' >> /etc/sysctl.conf
+
+# Deps
 RUN apt-get update \
   && apt-get install -y \
-  ros-humble-realsense2-* \
-  #ros-humble-realsense2-camera \
-  #ros-humble-realsense2-camera-msgs \
-  #ros-humble-realsense2-description \
-  ros-humble-image-pipeline
+  ros-${ROS_DISTRO}-librealsense2* \
+  ros-${ROS_DISTRO}-realsense2-* \
+  #ros-${ROS_DISTRO}-realsense2-camera \
+  #ros-${ROS_DISTRO}-realsense2-camera-msgs \
+  #ros-${ROS_DISTRO}-realsense2-description \
+  ros-${ROS_DISTRO}-image-pipeline \
+  && rm -rf /var/lib/apt/lists/*
 
+# Setup Workspace
 COPY ../src /ros2_ws/src
-
 WORKDIR /ros2_ws
-
-RUN source /opt/ros/humble/setup.bash \
-# && rosdep update \
-# && rosdep install -i --from-path src --rosdistro humble -y \
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
+ #&& rosdep update \
+ #&& rosdep install -i --from-path src --rosdistro ${ROS_DISTRO} -y \
  && colcon build \
- && echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \
+ && echo 'source /opt/ros/${ROS_DISTRO}/setup.bash' >> /root/.bashrc \
  && echo 'source /ros2_ws/install/setup.bash' >> /root/.bashrc \
  && echo 'source /ros2_ws/install/setup.bash' >> /ros_entrypoint.sh
 
