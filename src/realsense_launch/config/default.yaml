@@ -1,10 +1,11 @@
+# !!! THIS FILE IS CURRENTLY NOT USED !!!
 #serial_no: 
 device_type: d435
 reconnect_timeout: 10
 initial_reset: true
 
-rgb_camera.color_profile: 1280x720x15
-depth_module.depth_profile: 848x480x15
+rgb_camera.color_profile: 1280x720x30
+depth_module.depth_profile: 848x480x30
 
 enable_color: true
 enable_depth: true
@@ -15,7 +16,7 @@ enable_sync: true
 pointcloud.enable: true
 enable_rgbd: true
 align_depth.enable: true
-#clip_distance: 1.5 # m
+clip_distance: 2.5 # m
 
 publish_tf: true
 tf_publish_rate: 1.0
