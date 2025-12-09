@@ -1,4 +1,4 @@
-ARG ROS_DISTRO=jazzy
+ARG ROS_DISTRO=humble
 #ARG SUBNET='10.1.1.0'
 
 #FROM ros:$ROS_DISTRO-ros-base
