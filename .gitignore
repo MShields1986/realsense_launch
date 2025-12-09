@@ -49,3 +49,12 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+
+# ROS bag files
+**/bags/*.db3
+**/bags/*.yaml
+**/bags/*.mcap
+**/bags/realsense_recording*
+*.bag
+*.db3
+*.mcap

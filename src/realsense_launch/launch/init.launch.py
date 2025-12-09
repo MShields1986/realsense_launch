@@ -1,8 +1,5 @@
-#import os
-#from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
 
@@ -12,13 +9,9 @@ from launch_ros.substitutions import FindPackageShare
 
 package_dir = FindPackageShare('realsense_launch')
 
-#config = os.path.join(
-#      get_package_share_directory('realsense_launch'),
-#      'config',
-#      'default.yaml'
-#      )
-
-launch_params = [{'name': 'rviz', 'default': 'true', 'description': 'flag to run RViz'}]
+launch_params =         [{'name': 'rviz',                         'default': 'true',        'description': 'flag to run RViz'},
+                         {'name': 'logging',                      'default': 'true',        'description': 'flag to enable ROS bag recording'}
+                         ]
 
 realsense_node_params = [{'name': 'serial_no',                    'default': '',            'description': 'choose device by serial number'},
                          {'name': 'device_type',                  'default': '',            'description': 'choose device by type'},
@@ -42,12 +35,12 @@ realsense_node_params = [{'name': 'serial_no',                    'default': '',
                          {'name': 'enable_rgbd',                  'default': 'true',        'description': 'enable rgbd topic'},
                          {'name': 'align_depth.enable',           'default': 'true',        'description': 'enable align depth filter'},
                          {'name': 'publish_tf',                   'default': 'true',        'description': '[bool] enable/disable publishing static & dynamic TF'},
-                         {'name': 'tf_publish_rate',              'default': '50.0',         'description': '[double] rate in HZ for publishing dynamic TF'},
+                         {'name': 'tf_publish_rate',              'default': '50.0',        'description': '[double] rate in HZ for publishing dynamic TF'},
                          #{'name': 'config_file',                  'default': [config],      'description': 'yaml config file'},
                         ]
 
-register_node_params = [{'name': 'queue_size', 'default': '10', 'description': 'size of message queue for synchronizing subscribed topics'},
-                        {'name': 'use_rgb_timestamp', 'default': 'true', 'description': 'use timestamp of rgb image instead of depth image for the registered image'}
+register_node_params = [{'name': 'queue_size',                     'default': '10',          'description': 'size of message queue for synchronizing subscribed topics'},
+                        {'name': 'use_rgb_timestamp',              'default': 'true',          'description': 'use timestamp of rgb image instead of depth image for the registered image'}
                         ]
 
 def declare_configurable_parameters(parameters):
@@ -65,7 +58,9 @@ def generate_launch_description():
         ComposableNodeContainer(name='realsense_container',
                                 namespace='',
                                 package='rclcpp_components',
-                                executable='component_container',
+                                # executable='component_container',
+                                executable='component_container_mt',
+                                parameters=[{'thread_num': 10, 'use_sim_time': True}],
                                 composable_node_descriptions=[
                                             ComposableNode(package='realsense2_camera',
                                                            namespace='',
@@ -80,7 +75,9 @@ def generate_launch_description():
                                                            name='rectify_node',
                                                            remappings=[('camera_info', '/camera/color/camera_info'),
                                                                        ('image', '/camera/color/image_raw'),
-                                                                       ('image_rect', '/camera/color/image_rect')],
+                                                                       ('image_rect', '/camera/color/image_rect')
+                                                                       ],
+                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='depth_image_proc',
                                                            namespace='',
@@ -93,6 +90,7 @@ def generate_launch_description():
                                                                        ('depth_registered/camera_info', '/camera/depth_registered/camera_info'),
                                                                        ('depth_registered/image_rect', '/camera/depth_registered/image_rect_raw'),
                                                                        ],
+                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='depth_image_proc',
                                                            namespace='',
@@ -103,6 +101,23 @@ def generate_launch_description():
                                                                        ('rgb/camera_info', '/camera/color/camera_info'),
                                                                        ('points', '/camera/color/pointcloud'),
                                                                        ],
+                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
+                                                           ),
+                                            ComposableNode(package='realsense_launch',
+                                                           namespace='',
+                                                           plugin='realsense_launch::VoxelGridNode',
+                                                           name='voxel_grid',
+                                                           remappings=[('input', '/camera/color/pointcloud'),
+                                                                       ('output', '/camera/color/voxel_grid')
+                                                                       ],
+                                                            parameters=[{'leaf_size': 0.05,
+                                                                         'filter_field_name': 'z',
+                                                                         'filter_limit_min': 0.01,
+                                                                         'filter_limit_max': 2.30,
+                                                                         'filter_limit_negative': False,
+                                                                         'queue_size': 10
+                                                                         }],
+                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            )
                                 ],
                                 output='screen',
@@ -116,5 +131,21 @@ def generate_launch_description():
                      arguments=['-d', PathJoinSubstitution([package_dir, 'rviz', 'template.rviz'])],
                      condition=IfCondition(LaunchConfiguration('rviz')),
                      )
+        ] +
+        [
+        ExecuteProcess(cmd=['ros2', 'bag', 'record',
+                            '-o', '/ros2_ws/src/realsense_launch/bags/realsense_recording',
+                            '--topics',
+                            '/camera/color/voxel_grid',
+                            '/camera/color/camera_info',
+                            '/camera/color/image_raw',
+                            '/camera/depth/camera_info',
+                            '/camera/depth/image_rect_raw',
+                            '/tf',
+                            '/tf_static',
+                            '/clock'],
+                       output='screen',
+                       condition=IfCondition(LaunchConfiguration('logging')),
+                       )
         ]
         )

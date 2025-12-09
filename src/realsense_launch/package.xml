@@ -15,6 +15,10 @@
   <depend>ros-humble-realsense2-camera-msgs</depend>
   <depend>ros-humble-realsense2-description</depend>
   <depend>ament_index_cpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
+  <depend>libpcl-all-dev</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

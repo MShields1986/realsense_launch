@@ -17,18 +17,61 @@ set(
 #    ros-humble-realsense2-camera-msgs
 #    ros-humble-realsense2-description
     ament_index_cpp
+    sensor_msgs
+    pcl_conversions
+    pcl_ros
   )
 
 foreach(PACKAGE ${THIS_PACKAGE_DEPS})
   find_package(${PACKAGE} REQUIRED)
 endforeach()
 
+find_package(PCL REQUIRED COMPONENTS common filters)
+
+##########################
+# Build VoxelGrid Component
+##########################
+add_library(voxel_grid_component SHARED
+  src/voxel_grid_node.cpp
+)
+
+target_include_directories(voxel_grid_component PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  ${PCL_INCLUDE_DIRS}
+)
+
+target_link_libraries(voxel_grid_component
+  ${PCL_LIBRARIES}
+)
+
+ament_target_dependencies(voxel_grid_component
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  pcl_conversions
+  pcl_ros
+)
+
+rclcpp_components_register_node(voxel_grid_component
+  PLUGIN "realsense_launch::VoxelGridNode"
+  EXECUTABLE voxel_grid_node
+)
+
 ##########################
 # Installation
 ##########################
 
+install(TARGETS
+  voxel_grid_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 install(
   DIRECTORY
+    bags
     config
     launch
     rviz
