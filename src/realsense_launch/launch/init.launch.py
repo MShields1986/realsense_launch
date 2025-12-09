@@ -9,14 +9,12 @@ from launch_ros.substitutions import FindPackageShare
 
 package_dir = FindPackageShare('realsense_launch')
 
-launch_params =         [{'name': 'rviz',                         'default': 'true',        'description': 'flag to run RViz'},
+launch_params =         [{'name': 'camera_type',                  'default': 'd435',        'description': 'camera type (d415, d435, etc.)'},
+                         {'name': 'rviz',                         'default': 'true',        'description': 'flag to run RViz'},
                          {'name': 'logging',                      'default': 'true',        'description': 'flag to enable ROS bag recording'}
                          ]
 
 realsense_node_params = [{'name': 'serial_no',                    'default': '',            'description': 'choose device by serial number'},
-                         {'name': 'device_type',                  'default': '',            'description': 'choose device by type'},
-                         {'name': 'camera_name',                  'default': 'rs_camera',   'description': 'camera unique name'}, 
-                         {'name': 'camera_namespace',             'default': 'rs_camera',   'description': 'camera namespace'},
                          {'name': 'log_level',                    'default': 'info',        'description': 'debug log level [DEBUG|INFO|WARN|ERROR|FATAL]'},
                          {'name': 'intra_process_comms',          'default': 'true',        'description': 'enable intra-process communication'},
                          {'name': 'clip_distance',                'default': '2.5',         'description': 'distance limit for depth data'},
@@ -50,65 +48,70 @@ def set_configurable_parameters(parameters):
     return dict([(param['name'], LaunchConfiguration(param['name'])) for param in parameters])
 
 def generate_launch_description():
+    camera_type = LaunchConfiguration('camera_type')
+
     return LaunchDescription(
         declare_configurable_parameters(launch_params) +
         declare_configurable_parameters(realsense_node_params) +
         declare_configurable_parameters(register_node_params) +
         [
         ComposableNodeContainer(name='realsense_container',
-                                namespace='',
+                                namespace=camera_type,
                                 package='rclcpp_components',
                                 # executable='component_container',
                                 executable='component_container_mt',
                                 parameters=[{'thread_num': 10, 'use_sim_time': True}],
                                 composable_node_descriptions=[
                                             ComposableNode(package='realsense2_camera',
-                                                           namespace='',
+                                                           namespace=camera_type,
                                                            plugin='realsense2_camera::RealSenseNodeFactory',
                                                            name="camera",
-                                                           parameters=[set_configurable_parameters(realsense_node_params)],
+                                                           parameters=[{**set_configurable_parameters(realsense_node_params),
+                                                                        'device_type': camera_type,
+                                                                        'camera_name': [camera_type, '_camera'],
+                                                                        'camera_namespace': [camera_type, '_camera']}],
                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='image_proc',
-                                                           namespace='',
+                                                           namespace=camera_type,
                                                            plugin='image_proc::RectifyNode',
                                                            name='rectify_node',
-                                                           remappings=[('camera_info', '/camera/color/camera_info'),
-                                                                       ('image', '/camera/color/image_raw'),
-                                                                       ('image_rect', '/camera/color/image_rect')
+                                                           remappings=[('camera_info', ['camera/color/camera_info']),
+                                                                       ('image', ['camera/color/image_raw']),
+                                                                       ('image_rect', ['camera/color/image_rect'])
                                                                        ],
                                                             extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='depth_image_proc',
-                                                           namespace='',
+                                                           namespace=camera_type,
                                                            plugin='depth_image_proc::RegisterNode',
                                                            name='register_node',
                                                            parameters=[set_configurable_parameters(register_node_params)],
-                                                           remappings=[('depth/image_rect', '/camera/depth/image_rect_raw'),
-                                                                       ('depth/camera_info', '/camera/depth/camera_info'),
-                                                                       ('rgb/camera_info', '/camera/color/camera_info'),
-                                                                       ('depth_registered/camera_info', '/camera/depth_registered/camera_info'),
-                                                                       ('depth_registered/image_rect', '/camera/depth_registered/image_rect_raw'),
+                                                           remappings=[('depth/image_rect', ['camera/depth/image_rect_raw']),
+                                                                       ('depth/camera_info', ['camera/depth/camera_info']),
+                                                                       ('rgb/camera_info', ['camera/color/camera_info']),
+                                                                       ('depth_registered/camera_info', ['camera/depth_registered/camera_info']),
+                                                                       ('depth_registered/image_rect', ['camera/depth_registered/image_rect_raw']),
                                                                        ],
                                                             extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='depth_image_proc',
-                                                           namespace='',
+                                                           namespace=camera_type,
                                                            plugin='depth_image_proc::PointCloudXyzrgbNode',
                                                            name='xyzrgb_points',
-                                                           remappings=[('depth_registered/image_rect', '/camera/depth_registered/image_rect_raw'),
-                                                                       ('rgb/image_rect_color', '/camera/color/image_rect'),
-                                                                       ('rgb/camera_info', '/camera/color/camera_info'),
-                                                                       ('points', '/camera/color/pointcloud'),
+                                                           remappings=[('depth_registered/image_rect', ['camera/depth_registered/image_rect_raw']),
+                                                                       ('rgb/image_rect_color', ['camera/color/image_rect']),
+                                                                       ('rgb/camera_info', ['camera/color/camera_info']),
+                                                                       ('points', ['camera/color/pointcloud']),
                                                                        ],
                                                             extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
                                                            ),
                                             ComposableNode(package='realsense_launch',
-                                                           namespace='',
+                                                           namespace=camera_type,
                                                            plugin='realsense_launch::VoxelGridNode',
                                                            name='voxel_grid',
-                                                           remappings=[('input', '/camera/color/pointcloud'),
-                                                                       ('output', '/camera/color/voxel_grid')
+                                                           remappings=[('input', ['camera/color/pointcloud']),
+                                                                       ('output', ['camera/color/voxel_grid'])
                                                                        ],
                                                             parameters=[{'leaf_size': 0.05,
                                                                          'filter_field_name': 'z',
@@ -126,24 +129,22 @@ def generate_launch_description():
         ] +
         [
         Node(package='rviz2',
-                     executable='rviz2',
-                     output='screen',
-                     arguments=['-d', PathJoinSubstitution([package_dir, 'rviz', 'template.rviz'])],
-                     condition=IfCondition(LaunchConfiguration('rviz')),
-                     )
+             executable='rviz2',
+             output='screen',
+             arguments=['-d', PathJoinSubstitution([package_dir, 'rviz', [camera_type, '.rviz']])],
+             condition=IfCondition(LaunchConfiguration('rviz')),
+             )
         ] +
         [
-        ExecuteProcess(cmd=['ros2', 'bag', 'record',
-                            '-o', '/ros2_ws/src/realsense_launch/bags/realsense_recording',
-                            '--topics',
-                            '/camera/color/voxel_grid',
-                            '/camera/color/camera_info',
-                            '/camera/color/image_raw',
-                            '/camera/depth/camera_info',
-                            '/camera/depth/image_rect_raw',
-                            '/tf',
-                            '/tf_static',
-                            '/clock'],
+        ExecuteProcess(cmd=['bash', '-c',
+                            ['ros2 bag record ',
+                             '-o /ros2_ws/src/realsense_launch/bags/', camera_type, '_realsense_recording_$(date +%Y%m%d_%H%M%S) ',
+                             '/', camera_type, '/camera/color/voxel_grid ',
+                             '/', camera_type, '/camera/color/camera_info ',
+                             '/', camera_type, '/camera/color/image_raw ',
+                             '/', camera_type, '/camera/depth/camera_info ',
+                             '/', camera_type, '/camera/depth/image_rect_raw ',
+                             '/tf /tf_static /clock']],
                        output='screen',
                        condition=IfCondition(LaunchConfiguration('logging')),
                        )

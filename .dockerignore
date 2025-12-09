@@ -1,0 +1,3 @@
+# Exclude rosbag recordings (keep directory, exclude contents)
+**/bags/*
+*.db3
