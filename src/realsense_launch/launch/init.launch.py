@@ -11,7 +11,7 @@ package_dir = FindPackageShare('realsense_launch')
 
 launch_params =         [{'name': 'camera_type',                  'default': 'd435',        'description': 'camera type (d415, d435, etc.)'},
                          {'name': 'rviz',                         'default': 'true',        'description': 'flag to run RViz'},
-                         {'name': 'logging',                      'default': 'true',        'description': 'flag to enable ROS bag recording'}
+                         {'name': 'logging',                      'default': 'false',       'description': 'flag to enable ROS bag recording'}
                          ]
 
 realsense_node_params = [{'name': 'serial_no',                    'default': '',            'description': 'choose device by serial number'},
@@ -144,6 +144,7 @@ def generate_launch_description():
                              '/', camera_type, '/camera/color/image_raw ',
                              '/', camera_type, '/camera/depth/camera_info ',
                              '/', camera_type, '/camera/depth/image_rect_raw ',
+                             '/odom /cmd_vel ',
                              '/tf /tf_static /clock']],
                        output='screen',
                        condition=IfCondition(LaunchConfiguration('logging')),
