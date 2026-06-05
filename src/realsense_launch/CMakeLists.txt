@@ -81,6 +81,7 @@ install(
 
 install(PROGRAMS
   scripts/camera_info_override.py
+  scripts/compute_urdf_extrinsic.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
