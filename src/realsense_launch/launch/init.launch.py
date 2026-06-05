@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
 
@@ -47,107 +47,139 @@ def declare_configurable_parameters(parameters):
 def set_configurable_parameters(parameters):
     return dict([(param['name'], LaunchConfiguration(param['name'])) for param in parameters])
 
-def generate_launch_description():
-    camera_type = LaunchConfiguration('camera_type')
+def launch_setup(context, *args, **kwargs):
+    camera_type      = LaunchConfiguration('camera_type').perform(context)
+    use_custom_cal   = LaunchConfiguration('use_custom_calibration').perform(context).lower() == 'true'
+    calibration_file = LaunchConfiguration('calibration_file').perform(context)
 
+    rs_remappings = []
+    if use_custom_cal:
+        rs_remappings = [('~/color/camera_info', 'camera/color/camera_info_nominal')]
+
+    container = ComposableNodeContainer(
+        name='realsense_container',
+        namespace=camera_type,
+        package='rclcpp_components',
+        executable='component_container_mt',
+        parameters=[{'thread_num': 10, 'use_sim_time': True}],
+        composable_node_descriptions=[
+            ComposableNode(package='realsense2_camera',
+                           namespace=camera_type,
+                           plugin='realsense2_camera::RealSenseNodeFactory',
+                           name='camera',
+                           parameters=[{**set_configurable_parameters(realsense_node_params),
+                                        'device_type': camera_type,
+                                        'camera_name': camera_type + '_camera',
+                                        'camera_namespace': camera_type + '_camera'}],
+                           remappings=rs_remappings,
+                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration('intra_process_comms')}],
+                           ),
+            ComposableNode(package='image_proc',
+                           namespace=camera_type,
+                           plugin='image_proc::RectifyNode',
+                           name='rectify_node',
+                           remappings=[('camera_info', 'camera/color/camera_info'),
+                                       ('image',       'camera/color/image_raw'),
+                                       ('image_rect',  'camera/color/image_rect')
+                                       ],
+                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration('intra_process_comms')}],
+                           ),
+            ComposableNode(package='depth_image_proc',
+                           namespace=camera_type,
+                           plugin='depth_image_proc::RegisterNode',
+                           name='register_node',
+                           parameters=[set_configurable_parameters(register_node_params)],
+                           remappings=[('depth/image_rect',              'camera/depth/image_rect_raw'),
+                                       ('depth/camera_info',             'camera/depth/camera_info'),
+                                       ('rgb/camera_info',               'camera/color/camera_info'),
+                                       ('depth_registered/camera_info',  'camera/depth_registered/camera_info'),
+                                       ('depth_registered/image_rect',   'camera/depth_registered/image_rect_raw'),
+                                       ],
+                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration('intra_process_comms')}],
+                           ),
+            ComposableNode(package='depth_image_proc',
+                           namespace=camera_type,
+                           plugin='depth_image_proc::PointCloudXyzrgbNode',
+                           name='xyzrgb_points',
+                           remappings=[('depth_registered/image_rect', 'camera/depth_registered/image_rect_raw'),
+                                       ('rgb/image_rect_color',        'camera/color/image_rect'),
+                                       ('rgb/camera_info',             'camera/color/camera_info'),
+                                       ('points',                      'camera/color/pointcloud'),
+                                       ],
+                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration('intra_process_comms')}],
+                           ),
+            ComposableNode(package='realsense_launch',
+                           namespace=camera_type,
+                           plugin='realsense_launch::VoxelGridNode',
+                           name='voxel_grid',
+                           remappings=[('input',  'camera/color/pointcloud'),
+                                       ('output', 'camera/color/voxel_grid')
+                                       ],
+                           parameters=[{'leaf_size': 0.05,
+                                        'filter_field_name': 'z',
+                                        'filter_limit_min': 0.01,
+                                        'filter_limit_max': 2.30,
+                                        'filter_limit_negative': False,
+                                        'queue_size': 10
+                                        }],
+                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration('intra_process_comms')}],
+                           )
+        ],
+        output='screen',
+        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+    )
+
+    nodes = [container]
+
+    if use_custom_cal:
+        nodes.append(Node(
+            package='realsense_launch',
+            executable='camera_info_override.py',
+            namespace=camera_type,
+            name='camera_info_override',
+            parameters=[{'calibration_file': calibration_file}],
+            remappings=[('camera_info_in',  'camera/color/camera_info_nominal'),
+                        ('camera_info_out', 'camera/color/camera_info')],
+            output='screen',
+        ))
+
+    nodes.append(Node(
+        package='rviz2',
+        executable='rviz2',
+        output='screen',
+        arguments=['-d', PathJoinSubstitution([package_dir, 'rviz', camera_type + '.rviz'])],
+        condition=IfCondition(LaunchConfiguration('rviz')),
+    ))
+
+    nodes.append(ExecuteProcess(
+        cmd=['bash', '-c',
+             'ros2 bag record '
+             '-o /ros2_ws/src/realsense_launch/bags/' + camera_type + '_realsense_recording_$(date +%Y%m%d_%H%M%S) '
+             '/' + camera_type + '/camera/color/voxel_grid '
+             '/' + camera_type + '/camera/color/camera_info '
+             '/' + camera_type + '/camera/color/image_raw '
+             '/' + camera_type + '/camera/depth/camera_info '
+             '/' + camera_type + '/camera/depth/image_rect_raw '
+             '/odom /cmd_vel '
+             '/tf /tf_static /clock'],
+        output='screen',
+        condition=IfCondition(LaunchConfiguration('logging')),
+    ))
+
+    return nodes
+
+def generate_launch_description():
     return LaunchDescription(
         declare_configurable_parameters(launch_params) +
         declare_configurable_parameters(realsense_node_params) +
         declare_configurable_parameters(register_node_params) +
         [
-        ComposableNodeContainer(name='realsense_container',
-                                namespace=camera_type,
-                                package='rclcpp_components',
-                                # executable='component_container',
-                                executable='component_container_mt',
-                                parameters=[{'thread_num': 10, 'use_sim_time': True}],
-                                composable_node_descriptions=[
-                                            ComposableNode(package='realsense2_camera',
-                                                           namespace=camera_type,
-                                                           plugin='realsense2_camera::RealSenseNodeFactory',
-                                                           name="camera",
-                                                           parameters=[{**set_configurable_parameters(realsense_node_params),
-                                                                        'device_type': camera_type,
-                                                                        'camera_name': [camera_type, '_camera'],
-                                                                        'camera_namespace': [camera_type, '_camera']}],
-                                                           extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
-                                                           ),
-                                            ComposableNode(package='image_proc',
-                                                           namespace=camera_type,
-                                                           plugin='image_proc::RectifyNode',
-                                                           name='rectify_node',
-                                                           remappings=[('camera_info', ['camera/color/camera_info']),
-                                                                       ('image', ['camera/color/image_raw']),
-                                                                       ('image_rect', ['camera/color/image_rect'])
-                                                                       ],
-                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
-                                                           ),
-                                            ComposableNode(package='depth_image_proc',
-                                                           namespace=camera_type,
-                                                           plugin='depth_image_proc::RegisterNode',
-                                                           name='register_node',
-                                                           parameters=[set_configurable_parameters(register_node_params)],
-                                                           remappings=[('depth/image_rect', ['camera/depth/image_rect_raw']),
-                                                                       ('depth/camera_info', ['camera/depth/camera_info']),
-                                                                       ('rgb/camera_info', ['camera/color/camera_info']),
-                                                                       ('depth_registered/camera_info', ['camera/depth_registered/camera_info']),
-                                                                       ('depth_registered/image_rect', ['camera/depth_registered/image_rect_raw']),
-                                                                       ],
-                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
-                                                           ),
-                                            ComposableNode(package='depth_image_proc',
-                                                           namespace=camera_type,
-                                                           plugin='depth_image_proc::PointCloudXyzrgbNode',
-                                                           name='xyzrgb_points',
-                                                           remappings=[('depth_registered/image_rect', ['camera/depth_registered/image_rect_raw']),
-                                                                       ('rgb/image_rect_color', ['camera/color/image_rect']),
-                                                                       ('rgb/camera_info', ['camera/color/camera_info']),
-                                                                       ('points', ['camera/color/pointcloud']),
-                                                                       ],
-                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
-                                                           ),
-                                            ComposableNode(package='realsense_launch',
-                                                           namespace=camera_type,
-                                                           plugin='realsense_launch::VoxelGridNode',
-                                                           name='voxel_grid',
-                                                           remappings=[('input', ['camera/color/pointcloud']),
-                                                                       ('output', ['camera/color/voxel_grid'])
-                                                                       ],
-                                                            parameters=[{'leaf_size': 0.05,
-                                                                         'filter_field_name': 'z',
-                                                                         'filter_limit_min': 0.01,
-                                                                         'filter_limit_max': 2.30,
-                                                                         'filter_limit_negative': False,
-                                                                         'queue_size': 10
-                                                                         }],
-                                                            extra_arguments=[{'use_intra_process_comms': LaunchConfiguration("intra_process_comms")}],
-                                                           )
-                                ],
-                                output='screen',
-                                arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
-                                )
-        ] +
-        [
-        Node(package='rviz2',
-             executable='rviz2',
-             output='screen',
-             arguments=['-d', PathJoinSubstitution([package_dir, 'rviz', [camera_type, '.rviz']])],
-             condition=IfCondition(LaunchConfiguration('rviz')),
-             )
-        ] +
-        [
-        ExecuteProcess(cmd=['bash', '-c',
-                            ['ros2 bag record ',
-                             '-o /ros2_ws/src/realsense_launch/bags/', camera_type, '_realsense_recording_$(date +%Y%m%d_%H%M%S) ',
-                             '/', camera_type, '/camera/color/voxel_grid ',
-                             '/', camera_type, '/camera/color/camera_info ',
-                             '/', camera_type, '/camera/color/image_raw ',
-                             '/', camera_type, '/camera/depth/camera_info ',
-                             '/', camera_type, '/camera/depth/image_rect_raw ',
-                             '/odom /cmd_vel ',
-                             '/tf /tf_static /clock']],
-                       output='screen',
-                       condition=IfCondition(LaunchConfiguration('logging')),
-                       )
+        DeclareLaunchArgument('use_custom_calibration', default_value='false',
+                              description='use custom camera calibration instead of nominal device intrinsics'),
+        DeclareLaunchArgument('calibration_file',
+                              default_value=PathJoinSubstitution([FindPackageShare('realsense_launch'),
+                                                                  'config', 'intrinsic_cal.yaml']),
+                              description='path to calibration YAML (used when use_custom_calibration:=true)'),
+        OpaqueFunction(function=launch_setup),
         ]
-        )
+    )
